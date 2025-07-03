@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     
     strategy:
       matrix:
@@ -30,9 +30,11 @@ jobs:
         run: |
           npm config set fetch-retry-mintimeout 20000
           npm config set fetch-retry-maxtimeout 120000
-          npm config set fetch-retries 3
+          npm config set fetch-retries 5
           npm config set fund false
           npm config set audit-level none
+          npm config set progress false
+          npm config set loglevel error
           
       - name: Clean npm cache and workspace (Windows)
         if: runner.os == 'Windows'
@@ -49,13 +51,14 @@ jobs:
           npm cache clean --force
           rm -rf node_modules || true
           
-      - name: Install dependencies with retry
+      - name: Install dependencies with extended timeout
+        timeout-minutes: 35
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 25
-          max_attempts: 3
-          retry_wait_seconds: 60
-          command: npm ci --no-audit --no-fund --ignore-scripts
+          timeout_minutes: 30
+          max_attempts: 2
+          retry_wait_seconds: 120
+          command: npm ci --no-audit --no-fund --ignore-scripts --silent --prefer-offline
         
       - name: Create mock Convex files for build (Windows)
         if: runner.os == 'Windows'
@@ -84,6 +87,7 @@ jobs:
           echo "export type Doc<T> = any;" >> convex/_generated/dataModel.ts
         
       - name: Build Electron app
+        timeout-minutes: 30
         run: npm run electron:dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
