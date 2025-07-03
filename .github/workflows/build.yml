@@ -31,7 +31,6 @@ jobs:
           npm config set fetch-retry-mintimeout 20000
           npm config set fetch-retry-maxtimeout 120000
           npm config set fetch-retries 3
-          npm config set network-timeout 300000
           npm config set fund false
           npm config set audit-level none
           
@@ -61,13 +60,17 @@ jobs:
       - name: Create mock Convex files for build (Windows)
         if: runner.os == 'Windows'
         run: |
-          mkdir convex\_generated
-          echo // Mock API for build > convex\_generated\api.ts
-          echo export const api = {} as any; >> convex\_generated\api.ts
-          echo export const internal = {} as any; >> convex\_generated\api.ts
-          echo // Mock dataModel for build > convex\_generated\dataModel.ts
-          echo export type Id^<T^> = string; >> convex\_generated\dataModel.ts
-          echo export type Doc^<T^> = any; >> convex\_generated\dataModel.ts
+          New-Item -ItemType Directory -Path convex\_generated -Force
+          Set-Content -Path convex\_generated\api.ts -Value @"
+          // Mock API for build
+          export const api = {} as any;
+          export const internal = {} as any;
+          "@
+          Set-Content -Path convex\_generated\dataModel.ts -Value @"
+          // Mock dataModel for build
+          export type Id<T> = string;
+          export type Doc<T> = any;
+          "@
         
       - name: Create mock Convex files for build (Unix)
         if: runner.os != 'Windows'
