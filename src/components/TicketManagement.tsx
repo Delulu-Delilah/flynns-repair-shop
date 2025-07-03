@@ -7,10 +7,11 @@ import { TicketDetails } from "./TicketDetails";
 import { Reports } from "./Reports";
 import { CustomerManagement } from "./CustomerManagement";
 import { TechnicianManagement } from "./TechnicianManagement";
+import { TimeClock } from "./TimeClock";
 import { useOffline } from "./OfflineManager";
 import { Id } from "../../convex/_generated/dataModel";
 
-type View = "tickets" | "create" | "details" | "reports" | "customers" | "technicians";
+type View = "tickets" | "create" | "details" | "reports" | "customers" | "technicians" | "timeclock";
 
 export function TicketManagement() {
   const [currentView, setCurrentView] = useState<View>("tickets");
@@ -41,6 +42,7 @@ export function TicketManagement() {
     { id: "create", label: "CREATE TICKET", icon: "➕" },
     { id: "customers", label: "CUSTOMERS", icon: "👥" },
     { id: "technicians", label: "TECHNICIANS", icon: "🔧" },
+    { id: "timeclock", label: "TIME CLOCK", icon: "🕐" },
     { id: "reports", label: "REPORTS", icon: "📊" },
   ];
 
@@ -210,6 +212,17 @@ export function TicketManagement() {
                   <div className="h-px bg-gradient-to-r from-cyan-500 to-transparent w-48 mt-2"></div>
                 </div>
                 <TechnicianManagement />
+              </div>
+            )}
+            {currentView === "timeclock" && (
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-cyan-400 font-mono tracking-wider">
+                    TIME.CLOCK.SYSTEM
+                  </h2>
+                  <div className="h-px bg-gradient-to-r from-cyan-500 to-transparent w-48 mt-2"></div>
+                </div>
+                <TimeClock />
               </div>
             )}
           </div>

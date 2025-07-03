@@ -95,6 +95,18 @@ const applicationTables = {
   })
     .index("by_ticket", ["ticketId"])
     .index("by_timestamp", ["timestamp"]),
+
+  timeEntries: defineTable({
+    technicianId: v.id("technicians"),
+    clockIn: v.number(),
+    clockOut: v.optional(v.number()),
+    totalHours: v.optional(v.number()),
+    date: v.string(), // ISO date string (YYYY-MM-DD)
+    notes: v.optional(v.string()),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_date", ["date"])
+    .index("by_technician_and_date", ["technicianId", "date"]),
 };
 
 export default defineSchema({
