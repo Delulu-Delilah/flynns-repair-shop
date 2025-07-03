@@ -1,0 +1,290 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-light: #00d4ff;
+  --color-dark: #000000;
+  --tron-cyan: #00d4ff;
+  --tron-orange: #ff6600;
+  --tron-green: #00ff41;
+  --tron-purple: #8000ff;
+  --tron-dark: #0a0a0a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter var', 'JetBrains Mono', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--tron-cyan);
+  background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+
+/* Tron Grid Background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, var(--tron-orange), var(--tron-cyan));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, var(--tron-orange), var(--tron-cyan));
+}
+
+/* Tron Components */
+.tron-card {
+  @apply bg-grid-dark-200 border border-cyan-500/30 rounded-container backdrop-blur-sm;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.1),
+    inset 0 1px 0 rgba(0, 212, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.tron-card:hover {
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow: 
+    0 0 30px rgba(0, 212, 255, 0.3),
+    inset 0 1px 0 rgba(0, 212, 255, 0.4);
+}
+
+.tron-button {
+  @apply px-6 py-3 rounded border border-cyan-500 bg-transparent text-cyan-500 font-medium;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tron-button:hover {
+  @apply text-grid-dark-400 bg-cyan-500 border-cyan-400;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.tron-button:active {
+  transform: translateY(0);
+}
+
+.tron-button-orange {
+  @apply border-orange-500 text-orange-500;
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
+}
+
+.tron-button-orange:hover {
+  @apply text-grid-dark-400 bg-orange-500 border-orange-400;
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+}
+
+.tron-button-green {
+  @apply border-electric-500 text-electric-500;
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, transparent 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.tron-button-green:hover {
+  @apply text-grid-dark-400 bg-electric-500 border-electric-400;
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+}
+
+.tron-input {
+  @apply w-full px-4 py-3 bg-grid-dark-200 border border-cyan-500/30 rounded text-cyan-100 placeholder-cyan-500/50;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.tron-input:focus {
+  @apply outline-none border-cyan-500;
+  box-shadow: 
+    inset 0 1px 3px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.tron-select {
+  @apply appearance-none cursor-pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2300d4ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.tron-select option {
+  background-color: #0a0a0a !important;
+  color: #00d4ff !important;
+  padding: 8px 12px;
+}
+
+.tron-header {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 212, 255, 0.1) 100%);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 212, 255, 0.1);
+}
+
+.tron-sidebar {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 212, 255, 0.05) 100%);
+  border-right: 1px solid rgba(0, 212, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.tron-nav-item {
+  @apply px-4 py-3 rounded-md text-cyan-300 font-medium transition-all duration-300;
+  background: transparent;
+  border-left: 3px solid transparent;
+}
+
+.tron-nav-item:hover {
+  @apply text-cyan-500 bg-cyan-500/10;
+  border-left-color: rgba(0, 212, 255, 0.5);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+}
+
+.tron-nav-item.active {
+  @apply text-cyan-400 bg-cyan-500/20;
+  border-left-color: var(--tron-cyan);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.tron-table {
+  @apply w-full;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tron-table th {
+  @apply px-6 py-4 text-left text-cyan-400 font-semibold border-b border-cyan-500/30;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tron-table td {
+  @apply px-6 py-4 text-cyan-100 border-b border-cyan-500/10;
+  transition: all 0.3s ease;
+}
+
+.tron-table tr:hover td {
+  @apply bg-cyan-500/5;
+  box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+.tron-status-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.tron-status-received {
+  @apply bg-cyan-500/20 text-cyan-400 border border-cyan-500/30;
+}
+
+.tron-status-in-progress {
+  @apply bg-orange-500/20 text-orange-400 border border-orange-500/30;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
+}
+
+.tron-status-completed {
+  @apply bg-electric-500/20 text-electric-400 border border-electric-500/30;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.tron-glow-text {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.tron-loading {
+  @apply inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent;
+  color: var(--tron-cyan);
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* Auth specific styles */
+.auth-input-field {
+  @apply tron-input;
+}
+
+.auth-button {
+  @apply tron-button;
+}
+
+/* Animations */
+@keyframes tron-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.tron-pulse {
+  animation: tron-pulse 2s ease-in-out infinite;
+}
+
+/* Custom Grid Pattern */
+.tron-grid-bg {
+  background-image: 
+    linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Window controls */
+.drag-region {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.drag-region button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Window frame styling */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Prevent text selection on title bar */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
