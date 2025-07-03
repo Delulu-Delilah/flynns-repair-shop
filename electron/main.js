@@ -461,6 +461,22 @@ class RepairGridApp {
         label: 'Help',
         submenu: [
           {
+            label: 'Check for Updates',
+            click: () => {
+              if (!isDev) {
+                autoUpdater.checkForUpdatesAndNotify();
+              } else {
+                dialog.showMessageBox(this.mainWindow, {
+                  type: 'info',
+                  title: 'Development Mode',
+                  message: 'Auto-updates are disabled in development mode.',
+                  buttons: ['OK']
+                });
+              }
+            }
+          },
+          { type: 'separator' },
+          {
             label: 'About Flynns',
             click: () => {
               this.showAboutDialog();
