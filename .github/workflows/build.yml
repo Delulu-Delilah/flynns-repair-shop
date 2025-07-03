@@ -27,6 +27,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Create mock Convex files for build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir convex\_generated
+          echo // Mock API for build > convex\_generated\api.ts
+          echo export const api = {} as any; >> convex\_generated\api.ts
+          echo export const internal = {} as any; >> convex\_generated\api.ts
+          echo // Mock dataModel for build > convex\_generated\dataModel.ts
+          echo export type Id^<T^> = string; >> convex\_generated\dataModel.ts
+          echo export type Doc^<T^> = any; >> convex\_generated\dataModel.ts
+        
+      - name: Create mock Convex files for build (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p convex/_generated
+          echo "// Mock API for build" > convex/_generated/api.ts
+          echo "export const api = {} as any;" >> convex/_generated/api.ts
+          echo "export const internal = {} as any;" >> convex/_generated/api.ts
+          echo "// Mock dataModel for build" > convex/_generated/dataModel.ts
+          echo "export type Id<T> = string;" >> convex/_generated/dataModel.ts
+          echo "export type Doc<T> = any;" >> convex/_generated/dataModel.ts
+        
       - name: Build Electron app
         run: npm run electron:dist
         env:
