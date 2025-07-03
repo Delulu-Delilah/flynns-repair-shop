@@ -23,7 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # Disable cache for Windows to avoid EEXIST errors
+          cache: ${{ matrix.os != 'windows-latest' && 'npm' || '' }}
           
       - name: Setup npm configuration
         run: |
@@ -31,18 +32,31 @@ jobs:
           npm config set fetch-retry-maxtimeout 120000
           npm config set fetch-retries 3
           npm config set network-timeout 300000
+          npm config set fund false
+          npm config set audit-level none
           
-      - name: Clear npm cache (Windows)
+      - name: Clean npm cache and workspace (Windows)
         if: runner.os == 'Windows'
-        run: npm cache clean --force
+        run: |
+          npm cache clean --force
+          npm cache verify
+          if (Test-Path node_modules) { 
+            cmd /c "rmdir /s /q node_modules" 2>$null
+          }
         
+      - name: Clean npm cache and workspace (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          npm cache clean --force
+          rm -rf node_modules || true
+          
       - name: Install dependencies with retry
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 20
+          timeout_minutes: 25
           max_attempts: 3
-          retry_wait_seconds: 30
-          command: npm ci --verbose
+          retry_wait_seconds: 60
+          command: npm ci --no-audit --no-fund --ignore-scripts
         
       - name: Create mock Convex files for build (Windows)
         if: runner.os == 'Windows'
