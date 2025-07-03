@@ -44,35 +44,52 @@ class RepairGridApp {
   }
 
   async initialize() {
-    // Set app icon and identity for Windows
-    if (process.platform === 'win32') {
-      // Set a unique app user model ID for Windows taskbar grouping
-      app.setAppUserModelId('com.repairgrid.repairgrid');
+    try {
+      console.log('Starting Flynns initialization...');
       
-      // Set app name
-      app.setName('Flynns');
+      // Set app icon and identity for Windows
+      if (process.platform === 'win32') {
+        // Set a unique app user model ID for Windows taskbar grouping
+        app.setAppUserModelId('com.repairgrid.repairgrid');
+        
+        // Set app name
+        app.setName('Flynns');
+      }
+      
+      // Initialize local database
+      console.log('Initializing database...');
+      localDb.initialize();
+      
+      // Initialize sync manager
+      console.log('Initializing sync manager...');
+      syncManager.initialize(process.env.VITE_CONVEX_URL || process.env.CONVEX_URL);
+
+      // Set up auto-updater
+      console.log('Setting up auto-updater...');
+      this.setupAutoUpdater();
+
+      // Set up IPC handlers
+      console.log('Setting up IPC handlers...');
+      this.setupIPC();
+
+      // Create the main window
+      console.log('Creating main window...');
+      this.createWindow();
+
+      // Set up the application menu
+      console.log('Creating menu...');
+      this.createMenu();
+
+      // Handle app events
+      console.log('Setting up app events...');
+      this.setupAppEvents();
+      
+      console.log('Flynns initialization complete!');
+    } catch (error) {
+      console.error('Error during initialization:', error);
+      // Still try to create window for debugging
+      this.createWindow();
     }
-    
-    // Initialize local database
-    localDb.initialize();
-    
-    // Initialize sync manager
-    syncManager.initialize(process.env.VITE_CONVEX_URL || process.env.CONVEX_URL);
-
-    // Set up auto-updater
-    this.setupAutoUpdater();
-
-    // Set up IPC handlers
-    this.setupIPC();
-
-    // Create the main window
-    this.createWindow();
-
-    // Set up the application menu
-    this.createMenu();
-
-    // Handle app events
-    this.setupAppEvents();
   }
 
   createWindow() {
@@ -123,15 +140,31 @@ class RepairGridApp {
       this.mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
     }
 
+    // Add error handling for failed loads
+    this.mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+      console.error('Failed to load:', errorDescription, validatedURL);
+      // Show window anyway for debugging
+      this.mainWindow.show();
+    });
+
     // Show window when ready
     this.mainWindow.once('ready-to-show', () => {
       this.mainWindow.show();
       
       // Focus the window
-      if (isDev) {
+      if (!isDev) {
         this.mainWindow.focus();
       }
     });
+
+    // Fallback: show window after timeout even if not ready
+    setTimeout(() => {
+      if (this.mainWindow && !this.mainWindow.isVisible()) {
+        console.log('Window not shown after 5s, forcing show...');
+        this.mainWindow.show();
+        this.mainWindow.webContents.openDevTools(); // Open dev tools for debugging
+      }
+    }, 5000);
 
     // Handle window closed
     this.mainWindow.on('closed', () => {
@@ -173,6 +206,7 @@ class RepairGridApp {
 
     autoUpdater.on('error', (err) => {
       console.log('Error in auto-updater. ' + err);
+      // Don't let updater errors prevent the app from starting
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
@@ -195,7 +229,12 @@ class RepairGridApp {
     // Check for updates on startup (after window is ready)
     setTimeout(() => {
       if (!isDev) {
-        autoUpdater.checkForUpdatesAndNotify();
+        try {
+          autoUpdater.checkForUpdatesAndNotify();
+        } catch (error) {
+          console.log('Auto-updater check failed:', error);
+          // Continue running app even if updater fails
+        }
       }
     }, 3000);
   }
