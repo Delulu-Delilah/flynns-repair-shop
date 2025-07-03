@@ -7,7 +7,7 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_GITHUB_USERNAME/flynns-repair-shop.git"
+    "url": "https://github.com/Delulu-Delilah/flynns-repair-shop.git"
   },
   "main": "electron/main.js",
   "homepage": "./",
@@ -65,7 +65,7 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "YOUR_GITHUB_USERNAME",
+      "owner": "Delulu-Delilah",
       "repo": "flynns-repair-shop"
     },
     "files": [
