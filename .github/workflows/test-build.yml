@@ -45,7 +45,6 @@ jobs:
           npm config set fetch-retry-maxtimeout 60000
           npm config set progress false
           npm config set loglevel warn
-          npm config set cache-min 9999999
           npm config set prefer-offline true
 
       - name: Clear npm cache (Windows)
@@ -60,12 +59,30 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          # Try npm ci first, fallback to npm install if it fails
+          Write-Host "Starting npm install..."
+          $ErrorActionPreference = "Continue"
+          
           try {
+            Write-Host "Attempting npm ci..."
             npm ci --no-audit --no-fund --silent --progress=false --prefer-offline
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "npm ci completed successfully"
+            } else {
+              throw "npm ci failed with exit code $LASTEXITCODE"
+            }
           } catch {
             Write-Host "npm ci failed, trying npm install..."
-            npm install --no-audit --no-fund --silent --progress=false --prefer-offline
+            try {
+              npm install --no-audit --no-fund --silent --progress=false --prefer-offline
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "npm install completed successfully"
+              } else {
+                throw "npm install failed with exit code $LASTEXITCODE"
+              }
+            } catch {
+              Write-Host "Both npm ci and npm install failed"
+              exit 1
+            }
           }
         timeout-minutes: 20
 
