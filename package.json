@@ -68,13 +68,7 @@
     "directories": {
       "output": "dist-electron"
     },
-    "publish": {
-      "provider": "github",
-      "owner": "Delulu-Delilah",
-      "repo": "flynns-repair-shop",
-      "private": false,
-      "releaseType": "release"
-    },
+    "publish": null,
     "files": [
       "dist/**/*",
       "electron/**/*",
