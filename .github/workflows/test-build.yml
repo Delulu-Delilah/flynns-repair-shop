@@ -1,0 +1,56 @@
+name: Test Build
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  test-build:
+    name: Test Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Convex API files
+        run: |
+          mkdir -p convex/_generated
+          echo 'export const api = {} as any;' > convex/_generated/api.ts
+          echo 'export const internal = {} as any;' > convex/_generated/api.ts
+          echo 'export const server = {} as any;' > convex/_generated/server.ts
+          echo 'export const dataModel = {} as any;' > convex/_generated/dataModel.ts
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build Electron app
+        run: npm run electron:dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-build-${{ matrix.os }}
+          path: dist-electron/
+          retention-days: 7 

@@ -5,125 +5,106 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.0.4)'
+        required: true
+        default: '1.0.4'
+
+env:
+  NODE_VERSION: '18'
+  ELECTRON_VERSION: '36.5.0'
 
 jobs:
   build:
+    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
-    
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-    
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux
+          - os: windows-latest
+            artifact_name: windows
+          - os: macos-latest
+            artifact_name: macos
+
     steps:
-      - name: Check out Git repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        
-      - name: Install Node.js
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          # Disable cache for Windows to avoid EEXIST errors
-          cache: ${{ matrix.os != 'windows-latest' && 'npm' || '' }}
-          
-      - name: Setup npm configuration
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
         run: |
-          npm config set fetch-retry-mintimeout 20000
-          npm config set fetch-retry-maxtimeout 120000
-          npm config set fetch-retries 5
-          npm config set fund false
-          npm config set audit-level none
-          npm config set progress false
-          npm config set loglevel error
-          
-      - name: Clean npm cache and workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          npm cache clean --force
-          npm cache verify
-          if (Test-Path node_modules) { 
-            cmd /c "rmdir /s /q node_modules" 2>$null
-          }
-        
-      - name: Clean npm cache and workspace (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          npm cache clean --force
-          rm -rf node_modules || true
-          
-      - name: Install dependencies with extended timeout
-        timeout-minutes: 35
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 30
-          max_attempts: 2
-          retry_wait_seconds: 120
-          command: npm ci --no-audit --no-fund --ignore-scripts --silent --prefer-offline
-        
-      - name: Create mock Convex files for build (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          New-Item -ItemType Directory -Path convex\_generated -Force
-          Set-Content -Path convex\_generated\api.ts -Value @"
-          // Mock API for build
-          export const api = {} as any;
-          export const internal = {} as any;
-          "@
-          Set-Content -Path convex\_generated\dataModel.ts -Value @"
-          // Mock dataModel for build
-          export type Id<T> = string;
-          export type Doc<T> = any;
-          "@
-        
-      - name: Create mock Convex files for build (Unix)
-        if: runner.os != 'Windows'
+          npm ci
+          npm install -g @electron/rebuild
+
+      - name: Create Convex API files
         run: |
           mkdir -p convex/_generated
-          echo "// Mock API for build" > convex/_generated/api.ts
-          echo "export const api = {} as any;" >> convex/_generated/api.ts
-          echo "export const internal = {} as any;" >> convex/_generated/api.ts
-          echo "// Mock dataModel for build" > convex/_generated/dataModel.ts
-          echo "export type Id<T> = string;" >> convex/_generated/dataModel.ts
-          echo "export type Doc<T> = any;" >> convex/_generated/dataModel.ts
-        
+          echo 'export const api = {} as any;' > convex/_generated/api.ts
+          echo 'export const internal = {} as any;' > convex/_generated/api.ts
+          echo 'export const server = {} as any;' > convex/_generated/server.ts
+          echo 'export const dataModel = {} as any;' > convex/_generated/dataModel.ts
+
+      - name: Build application
+        run: npm run build
+
       - name: Build Electron app
-        timeout-minutes: 30
         run: npm run electron:dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.os }}
+          name: ${{ matrix.artifact_name }}-build
           path: |
-            dist-electron/*.exe
-            dist-electron/*.dmg
-            dist-electron/*.AppImage
-            dist-electron/*.deb
-            dist-electron/*.rpm
-            dist-electron/*.zip
-            dist-electron/latest*.yml
-            
+            dist-electron/
+            !dist-electron/builder-debug.yml
+            !dist-electron/builder-effective-config.yaml
+
   release:
+    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
-      - name: Check out Git repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-        
+        with:
+          path: artifacts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-windows-latest/*
-            release-macos-latest/*
-            release-ubuntu-latest/*
+            artifacts/*/dist-electron/*.exe
+            artifacts/*/dist-electron/*.dmg
+            artifacts/*/dist-electron/*.AppImage
+            artifacts/*/dist-electron/*.deb
+            artifacts/*/dist-electron/*.rpm
+            artifacts/*/dist-electron/*.snap
+            artifacts/*/dist-electron/*.zip
+            artifacts/*/dist-electron/*.tar.gz
+          generate_release_notes: true
           draft: false
           prerelease: false
         env:
