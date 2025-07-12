@@ -35,19 +35,6 @@ git push origin v1.0.5
 - Uploads build artifacts for review
 - Perfect for testing changes before release
 
-### 3. Security Scan (`security-scan.yml`)
-
-**Triggers:**
-- Push to main branch
-- Pull requests to main branch
-- Manual workflow dispatch
-
-**What it does:**
-- Runs Electronegativity security scanner
-- Checks for common Electron security issues
-- Comments on PRs with security findings
-- Uploads security reports as artifacts
-
 ## Best Practices
 
 ### Version Management
@@ -79,11 +66,11 @@ git push origin v1.0.5
    ```
 
 3. **Create pull request:**
-   - This triggers test builds and security scans
+   - This triggers test builds
    - Review the results before merging
 
 4. **Merge to main:**
-   - Triggers security scan on main branch
+   - Ready for release
 
 5. **Create release:**
    ```bash
@@ -99,12 +86,7 @@ git push origin v1.0.5
    - Check if all dependencies are compatible
    - Ensure Convex API files are generated correctly
 
-2. **Security scan finds issues:**
-   - Review the security report
-   - Address high and medium priority issues
-   - Update Electron version if needed
-
-3. **Release creation fails:**
+2. **Release creation fails:**
    - Check if tag format is correct (v*)
    - Ensure GitHub token has proper permissions
    - Verify all build jobs completed successfully
@@ -123,7 +105,7 @@ You can manually trigger any workflow from the GitHub Actions tab:
 
 The workflows use these environment variables:
 
-- `NODE_VERSION`: Node.js version (default: 18)
+- `NODE_VERSION`: Node.js version (default: 20)
 - `ELECTRON_VERSION`: Electron version (default: 36.5.0)
 - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
 
@@ -132,7 +114,6 @@ The workflows use these environment variables:
 Workflows create these artifacts:
 
 - **Build artifacts**: Distributable packages for each platform
-- **Security reports**: CSV files with security scan results
 - **Test builds**: Build outputs for testing purposes
 
 Artifacts are automatically cleaned up after 7-30 days depending on the workflow. 
