@@ -45,6 +45,7 @@ jobs:
 
       - name: Configure npm for Windows
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           npm config set registry https://registry.npmjs.org/
           npm config set fetch-retries 3
@@ -53,13 +54,15 @@ jobs:
           npm config set progress false
           npm config set loglevel warn
 
-      - name: Install dependencies
-        run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            npm ci --no-audit --no-fund --silent --progress=false
-          else
-            npm ci
-          fi
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: npm ci --no-audit --no-fund --silent --progress=false
+        timeout-minutes: 15
+
+      - name: Install dependencies (Unix)
+        if: matrix.os != 'windows-latest'
+        run: npm ci
         timeout-minutes: 15
 
       - name: Create Convex API files
@@ -72,16 +75,20 @@ jobs:
         run: npm run build
         timeout-minutes: 10
 
-      - name: Clean problematic Convex files
+      - name: Clean problematic Convex files (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
           # Remove problematic Convex files that cause electron-builder issues
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            Remove-Item -Path "node_modules/convex/dist/esm-types/test" -Recurse -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path "node_modules/convex/**/*.d.ts.map" -Recurse -Force -ErrorAction SilentlyContinue
-          else
-            rm -rf node_modules/convex/dist/esm-types/test
-            find node_modules/convex -name "*.d.ts.map" -delete
-          fi
+          Remove-Item -Path "node_modules/convex/dist/esm-types/test" -Recurse -Force -ErrorAction SilentlyContinue
+          Get-ChildItem -Path "node_modules/convex" -Recurse -Filter "*.d.ts.map" | Remove-Item -Force
+
+      - name: Clean problematic Convex files (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          # Remove problematic Convex files that cause electron-builder issues
+          rm -rf node_modules/convex/dist/esm-types/test
+          find node_modules/convex -name "*.d.ts.map" -delete
 
       - name: Build Electron application
         run: npm run electron:dist
