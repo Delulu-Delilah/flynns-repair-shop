@@ -34,6 +34,11 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Build Electron application
+        run: npm run electron:dist
+        env:
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+
       - name: Install Electronegativity
         run: npm install -g @doyensec/electronegativity
 
