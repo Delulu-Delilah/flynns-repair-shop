@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create Convex API files
+        run: |
+          mkdir -p convex/_generated
+          echo 'export const api = {} as any;' > convex/_generated/api.ts
+          echo 'export const internal = {} as any;' > convex/_generated/internal.ts
+
       - name: Build application
         run: npm run build
 
