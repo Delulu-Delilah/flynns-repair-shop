@@ -43,69 +43,129 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          npm ci
-          npm install -g @electron/rebuild
+        run: npm ci
 
       - name: Create Convex API files
         run: |
           mkdir -p convex/_generated
           echo 'export const api = {} as any;' > convex/_generated/api.ts
-          echo 'export const internal = {} as any;' > convex/_generated/api.ts
-          echo 'export const server = {} as any;' > convex/_generated/server.ts
-          echo 'export const dataModel = {} as any;' > convex/_generated/dataModel.ts
+          echo 'export const internal = {} as any;' > convex/_generated/internal.ts
 
       - name: Build application
         run: npm run build
 
-      - name: Build Electron app
+      - name: Build Electron application
         run: npm run electron:dist
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
 
-      - name: Upload artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-build
-          path: |
-            dist-electron/
-            !dist-electron/builder-debug.yml
-            !dist-electron/builder-effective-config.yaml
+          path: dist-electron/
+          retention-days: 30
 
   release:
     name: Create Release
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     if: startsWith(github.ref, 'refs/tags/')
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: artifacts/
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create Convex API files
+        run: |
+          mkdir -p convex/_generated
+          echo 'export const api = {} as any;' > convex/_generated/api.ts
+          echo 'export const internal = {} as any;' > convex/_generated/internal.ts
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build and publish Electron application
+        run: npm run electron:dist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            artifacts/*/dist-electron/*.exe
-            artifacts/*/dist-electron/*.dmg
-            artifacts/*/dist-electron/*.AppImage
-            artifacts/*/dist-electron/*.deb
-            artifacts/*/dist-electron/*.rpm
-            artifacts/*/dist-electron/*.snap
-            artifacts/*/dist-electron/*.zip
-            artifacts/*/dist-electron/*.tar.gz
-          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## 🚀 New Release: ${{ github.ref_name }}
+            
+            ### What's New
+            - Automated build and release
+            - Cross-platform support (Windows, macOS, Linux)
+            - Electron app with auto-updates
+            
+            ### Downloads
+            - Windows: `Flynns Setup ${{ github.ref_name }}.exe`
+            - macOS: `Flynns-${{ github.ref_name }}.dmg`
+            - Linux: `Flynns-${{ github.ref_name }}.AppImage`
+            
+            ### Installation
+            1. Download the appropriate file for your platform
+            2. Run the installer
+            3. The app will automatically update to future versions
+            
+            ### Changes
+            See the [commit history](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for detailed changes.
           draft: false
           prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist-electron/Flynns Setup ${{ github.ref_name }}.exe
+          asset_name: Flynns Setup ${{ github.ref_name }}.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Assets - macOS
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist-electron/Flynns-${{ github.ref_name }}.dmg
+          asset_name: Flynns-${{ github.ref_name }}.dmg
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Assets - Linux
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist-electron/Flynns-${{ github.ref_name }}.AppImage
+          asset_name: Flynns-${{ github.ref_name }}.AppImage
+          asset_content_type: application/octet-stream 

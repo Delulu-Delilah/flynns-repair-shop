@@ -21,7 +21,11 @@
     "electron:pack": "npm run build && electron-builder --dir",
     "electron:dist": "npm run build && electron-builder",
     "electron:dist:win": "npm run build && electron-builder --win",
-    "lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build"
+    "lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build",
+    "release": "node scripts/release.js",
+    "release:patch": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.80",
@@ -67,7 +71,9 @@
     "publish": {
       "provider": "github",
       "owner": "Delulu-Delilah",
-      "repo": "flynns-repair-shop"
+      "repo": "flynns-repair-shop",
+      "private": false,
+      "releaseType": "release"
     },
     "files": [
       "dist/**/*",
