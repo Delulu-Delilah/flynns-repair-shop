@@ -54,6 +54,17 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Clean problematic Convex files
+        run: |
+          # Remove problematic Convex files that cause electron-builder issues
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            Remove-Item -Path "node_modules/convex/dist/esm-types/test" -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path "node_modules/convex/**/*.d.ts.map" -Recurse -Force -ErrorAction SilentlyContinue
+          else
+            rm -rf node_modules/convex/dist/esm-types/test
+            find node_modules/convex -name "*.d.ts.map" -delete
+          fi
+
       - name: Build Electron application
         run: npm run electron:dist
         env:
