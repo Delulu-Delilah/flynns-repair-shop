@@ -35,9 +35,12 @@ jobs:
         run: npm run build
 
       - name: Build Electron application
-        run: npm run electron:dist
+        run: npx electron-builder --dir
         env:
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          GH_TOKEN: ""
+          GITHUB_TOKEN: ""
 
       - name: Install Electronegativity
         run: npm install -g @doyensec/electronegativity
