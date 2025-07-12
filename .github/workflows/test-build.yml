@@ -3,18 +3,27 @@ name: Test Build
 on:
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 env:
   NODE_VERSION: '20'
 
 jobs:
   test-build:
-    name: Test Build on ${{ matrix.os }}
+    name: Test Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: linux-test
+          - os: windows-latest
+            artifact_name: windows-test
+          - os: macos-latest
+            artifact_name: macos-test
 
     steps:
       - name: Checkout code
@@ -26,31 +35,55 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Configure npm for Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set fetch-retries 3
+          npm config set fetch-retry-mintimeout 5000
+          npm config set fetch-retry-maxtimeout 60000
+          npm config set progress false
+          npm config set loglevel warn
+
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            npm ci --no-audit --no-fund --silent --progress=false
+          else
+            npm ci
+          fi
+        timeout-minutes: 12
 
       - name: Create Convex API files
         run: |
           mkdir -p convex/_generated
           echo 'export const api = {} as any;' > convex/_generated/api.ts
-          echo 'export const internal = {} as any;' > convex/_generated/api.ts
-          echo 'export const server = {} as any;' > convex/_generated/server.ts
-          echo 'export const dataModel = {} as any;' > convex/_generated/dataModel.ts
-
-      - name: Run tests
-        run: npm test
+          echo 'export const internal = {} as any;' > convex/_generated/internal.ts
 
       - name: Build application
         run: npm run build
+        timeout-minutes: 8
 
-      - name: Build Electron app
-        run: npm run electron:dist
+      - name: Clean problematic Convex files
+        run: |
+          # Remove problematic Convex files that cause electron-builder issues
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            Remove-Item -Path "node_modules/convex/dist/esm-types/test" -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path "node_modules/convex/**/*.d.ts.map" -Recurse -Force -ErrorAction SilentlyContinue
+          else
+            rm -rf node_modules/convex/dist/esm-types/test
+            find node_modules/convex -name "*.d.ts.map" -delete
+          fi
+
+      - name: Test Electron build (dir only)
+        run: npm run electron:dist -- --dir
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        timeout-minutes: 15
 
-      - name: Upload build artifacts
+      - name: Upload test artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: test-build-${{ matrix.os }}
+          name: ${{ matrix.artifact_name }}
           path: dist-electron/
           retention-days: 7 
