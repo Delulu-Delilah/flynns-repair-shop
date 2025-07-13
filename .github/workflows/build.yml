@@ -224,8 +224,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist-electron/*.exe
-            dist-electron/*.dmg
-            dist-electron/*.AppImage
-            dist-electron/*.deb
-            dist-electron/*.rpm 
+            artifacts/windows-build/*.exe
+            artifacts/macos-build/*.dmg
+            artifacts/linux-build/*.AppImage
+            artifacts/linux-build/*.deb
+            artifacts/linux-build/*.rpm 
