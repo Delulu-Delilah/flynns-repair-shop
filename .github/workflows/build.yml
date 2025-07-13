@@ -186,14 +186,21 @@ jobs:
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         timeout-minutes: 20
 
+      - name: List dist-electron contents
+        run: |
+          echo "Contents of dist-electron directory:"
+          ls -la dist-electron/ || echo "dist-electron directory not found"
+          echo "Contents of current directory:"
+          ls -la
+
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           body: |
             ## 🚀 New Release: ${{ github.ref_name }}
             
@@ -216,33 +223,9 @@ jobs:
             See the [commit history](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for detailed changes.
           draft: false
           prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist-electron/Flynns Setup ${{ github.ref_name }}.exe
-          asset_name: Flynns Setup ${{ github.ref_name }}.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Assets - macOS
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist-electron/Flynns-${{ github.ref_name }}.dmg
-          asset_name: Flynns-${{ github.ref_name }}.dmg
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Assets - Linux
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist-electron/Flynns-${{ github.ref_name }}.AppImage
-          asset_name: Flynns-${{ github.ref_name }}.AppImage
-          asset_content_type: application/octet-stream 
+          files: |
+            dist-electron/*.exe
+            dist-electron/*.dmg
+            dist-electron/*.AppImage
+            dist-electron/*.deb
+            dist-electron/*.rpm 
