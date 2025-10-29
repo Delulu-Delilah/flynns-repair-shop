@@ -3,6 +3,9 @@ import { toast } from 'sonner';
 
 // Type definitions for Electron API
 interface ElectronAPI {
+  env: {
+    CONVEX_URL?: string;
+  };
   database: {
     insert: (table: string, data: any) => Promise<any>;
     update: (table: string, id: string, data: any) => Promise<any>;
@@ -102,7 +105,9 @@ export const OfflineProvider: React.FC<OfflineProviderProps> = ({ children }) =>
     // Check actual network connectivity by testing if we can reach Convex
     const checkConvexConnection = async () => {
       try {
-        const convexUrl = import.meta.env.VITE_CONVEX_URL;
+        const convexUrl =
+          (typeof window !== 'undefined' && window.electronAPI?.env?.CONVEX_URL) ||
+          import.meta.env.VITE_CONVEX_URL;
         if (!convexUrl) {
           setIsOnline(false);
           return;

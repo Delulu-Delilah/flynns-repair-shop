@@ -105,8 +105,20 @@ jobs:
           echo 'export const api = {} as any;' > convex/_generated/api.ts
           echo 'export const internal = {} as any;' > convex/_generated/internal.ts
 
+      - name: Inject environment (.env.production.local)
+        run: |
+          echo "VITE_CONVEX_URL=${{ secrets.VITE_CONVEX_URL }}" > .env.production.local
+          echo "CONVEX_URL=${{ secrets.VITE_CONVEX_URL }}" >> .env.production.local
+          echo "CONVEX_DEPLOYMENT=${{ secrets.CONVEX_DEPLOYMENT }}" >> .env.production.local
+          echo "CONVEX_SITE_URL=${{ secrets.CONVEX_SITE_URL }}" >> .env.production.local
+          # Keep legacy name for Electron runtime as well
+          cp .env.production.local .env.local
+        shell: bash
+
       - name: Build application
         run: npm run build
+        env:
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
         timeout-minutes: 10
 
       - name: Clean problematic Convex files (Windows)
@@ -174,8 +186,19 @@ jobs:
           echo 'export const api = {} as any;' > convex/_generated/api.ts
           echo 'export const internal = {} as any;' > convex/_generated/internal.ts
 
+      - name: Inject environment (.env.production.local)
+        run: |
+          echo "VITE_CONVEX_URL=${{ secrets.VITE_CONVEX_URL }}" > .env.production.local
+          echo "CONVEX_URL=${{ secrets.VITE_CONVEX_URL }}" >> .env.production.local
+          echo "CONVEX_DEPLOYMENT=${{ secrets.CONVEX_DEPLOYMENT }}" >> .env.production.local
+          echo "CONVEX_SITE_URL=${{ secrets.CONVEX_SITE_URL }}" >> .env.production.local
+          cp .env.production.local .env.local
+        shell: bash
+
       - name: Build application
         run: npm run build
+        env:
+          VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
         timeout-minutes: 10
 
       - name: Build and publish Electron application
