@@ -4,7 +4,7 @@
   "description": "Flynns Repair Shop Management System",
   "author": "Flynns Repair Shop",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/Delulu-Delilah/flynns-repair-shop.git"
@@ -81,6 +81,11 @@
       {
         "from": "electron/assets",
         "to": "assets"
+      },
+      {
+        "from": ".env.local",
+        "to": ".env.local",
+        "filter": [".env.local"]
       }
     ],
     "win": {

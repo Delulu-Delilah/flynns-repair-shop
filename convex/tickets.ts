@@ -87,7 +87,9 @@ export const updateTicketStatus = mutation({
     if (!ticket) throw new Error("Ticket not found");
     
     const now = Date.now();
-    const updates: Record<string, string | number> = { status: args.newStatus };
+    const updates: Partial<{ status: string; dateCompleted: number; datePickedUp: number }> = { 
+      status: args.newStatus 
+    };
     
     if (args.newStatus === "completed") {
       updates.dateCompleted = now;
@@ -150,7 +152,76 @@ export const updateTicketDetails = mutation({
 
 export const getTicket = query({
   args: { ticketId: v.id("tickets") },
-  returns: v.any(),
+  returns: v.union(
+    v.object({
+      _id: v.id("tickets"),
+      _creationTime: v.number(),
+      ticketNumber: v.string(),
+      customerId: v.id("customers"),
+      technicianId: v.optional(v.id("technicians")),
+      deviceMake: v.string(),
+      deviceModel: v.string(),
+      serialNumber: v.optional(v.string()),
+      issueDescription: v.string(),
+      diagnosticNotes: v.optional(v.string()),
+      repairActions: v.optional(v.string()),
+      status: v.union(
+        v.literal("received"),
+        v.literal("diagnosed"),
+        v.literal("in_progress"),
+        v.literal("awaiting_parts"),
+        v.literal("completed"),
+        v.literal("picked_up")
+      ),
+      priority: v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("urgent")
+      ),
+      estimatedCost: v.optional(v.number()),
+      finalCost: v.optional(v.number()),
+      dateReceived: v.number(),
+      dateCompleted: v.optional(v.number()),
+      datePickedUp: v.optional(v.number()),
+      customer: v.union(
+        v.object({
+          _id: v.id("customers"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.optional(v.string()),
+          phone: v.string(),
+          address: v.optional(v.string()),
+        }),
+        v.null()
+      ),
+      technician: v.union(
+        v.object({
+          _id: v.id("technicians"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.string(),
+          specialization: v.optional(v.string()),
+          isActive: v.boolean(),
+        }),
+        v.null()
+      ),
+      parts: v.array(
+        v.object({
+          _id: v.id("parts"),
+          _creationTime: v.number(),
+          ticketId: v.id("tickets"),
+          partName: v.string(),
+          partNumber: v.optional(v.string()),
+          quantity: v.number(),
+          unitCost: v.number(),
+          totalCost: v.number(),
+          supplier: v.optional(v.string()),
+        })
+      ),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -179,16 +250,72 @@ export const listTickets = query({
     technicianId: v.optional(v.id("technicians")),
     limit: v.optional(v.number()),
   },
-  returns: v.any(),
+  returns: v.array(
+    v.object({
+      _id: v.id("tickets"),
+      _creationTime: v.number(),
+      ticketNumber: v.string(),
+      customerId: v.id("customers"),
+      technicianId: v.optional(v.id("technicians")),
+      deviceMake: v.string(),
+      deviceModel: v.string(),
+      serialNumber: v.optional(v.string()),
+      issueDescription: v.string(),
+      diagnosticNotes: v.optional(v.string()),
+      repairActions: v.optional(v.string()),
+      status: v.union(
+        v.literal("received"),
+        v.literal("diagnosed"),
+        v.literal("in_progress"),
+        v.literal("awaiting_parts"),
+        v.literal("completed"),
+        v.literal("picked_up")
+      ),
+      priority: v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("urgent")
+      ),
+      estimatedCost: v.optional(v.number()),
+      finalCost: v.optional(v.number()),
+      dateReceived: v.number(),
+      dateCompleted: v.optional(v.number()),
+      datePickedUp: v.optional(v.number()),
+      customer: v.union(
+        v.object({
+          _id: v.id("customers"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.optional(v.string()),
+          phone: v.string(),
+          address: v.optional(v.string()),
+        }),
+        v.null()
+      ),
+      technician: v.union(
+        v.object({
+          _id: v.id("technicians"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.string(),
+          specialization: v.optional(v.string()),
+          isActive: v.boolean(),
+        }),
+        v.null()
+      ),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
     let tickets;
     
     if (args.status) {
+      const status = args.status as "received" | "diagnosed" | "in_progress" | "awaiting_parts" | "completed" | "picked_up";
       tickets = await ctx.db
         .query("tickets")
-        .withIndex("by_status", (q) => q.eq("status", args.status as any))
+        .withIndex("by_status", (q) => q.eq("status", status))
         .order("desc")
         .take(args.limit || 50);
     } else if (args.technicianId) {
@@ -226,7 +353,62 @@ export const searchTickets = query({
   args: {
     searchTerm: v.string(),
   },
-  returns: v.any(),
+  returns: v.array(
+    v.object({
+      _id: v.id("tickets"),
+      _creationTime: v.number(),
+      ticketNumber: v.string(),
+      customerId: v.id("customers"),
+      technicianId: v.optional(v.id("technicians")),
+      deviceMake: v.string(),
+      deviceModel: v.string(),
+      serialNumber: v.optional(v.string()),
+      issueDescription: v.string(),
+      diagnosticNotes: v.optional(v.string()),
+      repairActions: v.optional(v.string()),
+      status: v.union(
+        v.literal("received"),
+        v.literal("diagnosed"),
+        v.literal("in_progress"),
+        v.literal("awaiting_parts"),
+        v.literal("completed"),
+        v.literal("picked_up")
+      ),
+      priority: v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("urgent")
+      ),
+      estimatedCost: v.optional(v.number()),
+      finalCost: v.optional(v.number()),
+      dateReceived: v.number(),
+      dateCompleted: v.optional(v.number()),
+      datePickedUp: v.optional(v.number()),
+      customer: v.union(
+        v.object({
+          _id: v.id("customers"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.optional(v.string()),
+          phone: v.string(),
+          address: v.optional(v.string()),
+        }),
+        v.null()
+      ),
+      technician: v.union(
+        v.object({
+          _id: v.id("technicians"),
+          _creationTime: v.number(),
+          name: v.string(),
+          email: v.string(),
+          specialization: v.optional(v.string()),
+          isActive: v.boolean(),
+        }),
+        v.null()
+      ),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
