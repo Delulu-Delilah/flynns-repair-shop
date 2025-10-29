@@ -97,7 +97,7 @@ export function TimeClock() {
         </div>
         <select
           value={selectedTechnicianId || ""}
-          onChange={(e) => setSelectedTechnicianId(e.target.value as Id<"technicians"> || null)}
+          onChange={(e) => setSelectedTechnicianId(e.target.value ? e.target.value as Id<"technicians"> : null)}
           className="tron-input w-full"
         >
           <option value="">Choose technician...</option>
@@ -152,7 +152,7 @@ export function TimeClock() {
             <button
               onClick={handleClockOut}
               disabled={!activeTimeEntry}
-              className={`tron-button-danger ${
+              className={`tron-button-orange ${
                 !activeTimeEntry ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >

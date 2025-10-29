@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { Id } from "../../convex/_generated/dataModel";
-import { useAuthActions } from "@convex-dev/auth/react";
 
 export function TechnicianManagement() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -22,7 +21,6 @@ export function TechnicianManagement() {
   );
 
   const createTechnicianWithAccount = useMutation(api.technicians.createTechnicianWithAccount);
-  const { signIn } = useAuthActions();
 
   const handleCreateTechnician = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,19 +44,15 @@ export function TechnicianManagement() {
         specialization: newTechnician.specialization || undefined,
       });
       
-      // Now create the auth account using the signup flow
-      const formData = new FormData();
-      formData.set("email", result.email);
-      formData.set("password", result.password);
-      formData.set("flow", "signUp");
-      
-      // Create the auth account
-      await signIn("password", formData);
+      // Note: Auth account creation should be handled separately by the technician
+      // or through a separate admin endpoint. Calling signIn here would log out
+      // the current admin user and log in as the new technician.
       
       // Clear form and show success
       setNewTechnician({ name: "", email: "", password: "", specialization: "" });
       setShowCreateForm(false);
-      toast.success("Technician and user account created successfully");
+      toast.success(`Technician created! Credentials sent to ${result.email}`);
+      toast.info("The technician can now sign in with their email and password");
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes("already exists")) {

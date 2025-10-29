@@ -1,12 +1,14 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Doc } from "./_generated/dataModel";
 
 export const getTicketStats = query({
   args: {
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -48,7 +50,7 @@ export const getTicketStats = query({
   },
 });
 
-function groupTicketsByDay(tickets: any[]) {
+function groupTicketsByDay(tickets: Doc<"tickets">[]) {
   const groups: Record<string, number> = {};
   
   tickets.forEach(ticket => {
@@ -67,6 +69,7 @@ export const getTechnicianPerformance = query({
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     

@@ -1,9 +1,9 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 // Generate unique ticket number
-async function generateTicketNumber(ctx: any): Promise<string> {
+async function generateTicketNumber(ctx: MutationCtx): Promise<string> {
   const now = new Date();
   const year = now.getFullYear().toString().slice(-2);
   const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -15,7 +15,7 @@ async function generateTicketNumber(ctx: any): Promise<string> {
   
   const todayTickets = await ctx.db
     .query("tickets")
-    .withIndex("by_date_received", (q: any) => 
+    .withIndex("by_date_received", (q) => 
       q.gte("dateReceived", startOfDay).lt("dateReceived", endOfDay)
     )
     .collect();
@@ -34,6 +34,7 @@ export const createTicket = mutation({
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("urgent")),
     estimatedCost: v.optional(v.number()),
   },
+  returns: v.id("tickets"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -78,6 +79,7 @@ export const updateTicketStatus = mutation({
     ),
     notes: v.optional(v.string()),
   },
+  returns: v.id("tickets"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -85,7 +87,7 @@ export const updateTicketStatus = mutation({
     if (!ticket) throw new Error("Ticket not found");
     
     const now = Date.now();
-    const updates: any = { status: args.newStatus };
+    const updates: Record<string, string | number> = { status: args.newStatus };
     
     if (args.newStatus === "completed") {
       updates.dateCompleted = now;
@@ -113,6 +115,7 @@ export const assignTechnician = mutation({
     ticketId: v.id("tickets"),
     technicianId: v.id("technicians"),
   },
+  returns: v.id("tickets"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -131,10 +134,11 @@ export const updateTicketDetails = mutation({
     repairActions: v.optional(v.string()),
     finalCost: v.optional(v.number()),
   },
+  returns: v.id("tickets"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
-    const updates: any = {};
+    const updates: Partial<{ diagnosticNotes: string; repairActions: string; finalCost: number }> = {};
     if (args.diagnosticNotes !== undefined) updates.diagnosticNotes = args.diagnosticNotes;
     if (args.repairActions !== undefined) updates.repairActions = args.repairActions;
     if (args.finalCost !== undefined) updates.finalCost = args.finalCost;
@@ -146,6 +150,7 @@ export const updateTicketDetails = mutation({
 
 export const getTicket = query({
   args: { ticketId: v.id("tickets") },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -174,6 +179,7 @@ export const listTickets = query({
     technicianId: v.optional(v.id("technicians")),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -220,6 +226,7 @@ export const searchTickets = query({
   args: {
     searchTerm: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -272,6 +279,18 @@ export const searchTickets = query({
 
 export const getTicketHistory = query({
   args: { ticketId: v.id("tickets") },
+  returns: v.array(
+    v.object({
+      _id: v.id("statusHistory"),
+      _creationTime: v.number(),
+      ticketId: v.id("tickets"),
+      previousStatus: v.optional(v.string()),
+      newStatus: v.string(),
+      notes: v.optional(v.string()),
+      changedBy: v.optional(v.string()),
+      timestamp: v.number(),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -287,6 +306,7 @@ export const deleteTicket = mutation({
   args: {
     ticketId: v.id("tickets"),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     

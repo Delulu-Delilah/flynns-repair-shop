@@ -85,14 +85,47 @@ class LocalDatabase {
       CREATE TABLE IF NOT EXISTS parts (
         id TEXT PRIMARY KEY,
         ticket_id TEXT NOT NULL,
-        name TEXT NOT NULL,
+        part_name TEXT NOT NULL,
         part_number TEXT,
-        cost REAL NOT NULL,
+        unit_cost REAL NOT NULL,
         quantity INTEGER DEFAULT 1,
+        total_cost REAL NOT NULL,
         supplier TEXT,
         synced INTEGER DEFAULT 0,
         last_modified INTEGER DEFAULT (strftime('%s', 'now') * 1000),
         FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+      )
+    `);
+
+    // Status history table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS statusHistory (
+        id TEXT PRIMARY KEY,
+        ticket_id TEXT NOT NULL,
+        previous_status TEXT,
+        new_status TEXT NOT NULL,
+        notes TEXT,
+        changed_by TEXT,
+        timestamp INTEGER NOT NULL,
+        synced INTEGER DEFAULT 0,
+        last_modified INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (ticket_id) REFERENCES tickets (id)
+      )
+    `);
+
+    // Time entries table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS timeEntries (
+        id TEXT PRIMARY KEY,
+        technician_id TEXT NOT NULL,
+        clock_in INTEGER NOT NULL,
+        clock_out INTEGER,
+        total_hours REAL,
+        date TEXT NOT NULL,
+        notes TEXT,
+        synced INTEGER DEFAULT 0,
+        last_modified INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        FOREIGN KEY (technician_id) REFERENCES technicians (id)
       )
     `);
 
@@ -115,10 +148,16 @@ class LocalDatabase {
       CREATE INDEX IF NOT EXISTS idx_tickets_technician ON tickets(technician_id);
       CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
       CREATE INDEX IF NOT EXISTS idx_parts_ticket ON parts(ticket_id);
+      CREATE INDEX IF NOT EXISTS idx_statusHistory_ticket ON statusHistory(ticket_id);
+      CREATE INDEX IF NOT EXISTS idx_statusHistory_timestamp ON statusHistory(timestamp);
+      CREATE INDEX IF NOT EXISTS idx_timeEntries_technician ON timeEntries(technician_id);
+      CREATE INDEX IF NOT EXISTS idx_timeEntries_date ON timeEntries(date);
       CREATE INDEX IF NOT EXISTS idx_sync_unsynced ON customers(synced);
       CREATE INDEX IF NOT EXISTS idx_sync_unsynced_tickets ON tickets(synced);
       CREATE INDEX IF NOT EXISTS idx_sync_unsynced_technicians ON technicians(synced);
       CREATE INDEX IF NOT EXISTS idx_sync_unsynced_parts ON parts(synced);
+      CREATE INDEX IF NOT EXISTS idx_sync_unsynced_statusHistory ON statusHistory(synced);
+      CREATE INDEX IF NOT EXISTS idx_sync_unsynced_timeEntries ON timeEntries(synced);
     `);
   }
 
@@ -149,10 +188,10 @@ class LocalDatabase {
     
     try {
       const columns = Object.keys(data).map(key => `${key} = ?`).join(', ');
-      const values = [...Object.values(data), id];
+      const values = [...Object.values(data), Date.now(), id];
       
       const stmt = this.db.prepare(`UPDATE ${table} SET ${columns}, last_modified = ?, synced = 0 WHERE id = ?`);
-      const result = stmt.run(...values, Date.now());
+      const result = stmt.run(...values);
       
       // Log for sync
       this.logSync(table, id, 'UPDATE');

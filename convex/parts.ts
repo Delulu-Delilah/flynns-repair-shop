@@ -11,6 +11,7 @@ export const addPart = mutation({
     unitCost: v.number(),
     supplier: v.optional(v.string()),
   },
+  returns: v.id("parts"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -30,6 +31,19 @@ export const addPart = mutation({
 
 export const getTicketParts = query({
   args: { ticketId: v.id("tickets") },
+  returns: v.array(
+    v.object({
+      _id: v.id("parts"),
+      _creationTime: v.number(),
+      ticketId: v.id("tickets"),
+      partName: v.string(),
+      partNumber: v.optional(v.string()),
+      quantity: v.number(),
+      unitCost: v.number(),
+      totalCost: v.number(),
+      supplier: v.optional(v.string()),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -42,6 +56,7 @@ export const getTicketParts = query({
 
 export const removePart = mutation({
   args: { partId: v.id("parts") },
+  returns: v.id("parts"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     

@@ -8,6 +8,7 @@ export const createTechnician = mutation({
     email: v.string(),
     specialization: v.optional(v.string()),
   },
+  returns: v.id("technicians"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -27,6 +28,7 @@ export const createTechnicianWithAccount = mutation({
     password: v.string(),
     specialization: v.optional(v.string()),
   },
+  returns: v.object({ technicianId: v.id("technicians"), email: v.string(), password: v.string() }),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -55,6 +57,16 @@ export const createTechnicianWithAccount = mutation({
 
 export const listTechnicians = query({
   args: { activeOnly: v.optional(v.boolean()) },
+  returns: v.array(
+    v.object({
+      _id: v.id("technicians"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.string(),
+      specialization: v.optional(v.string()),
+      isActive: v.boolean(),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -73,6 +85,7 @@ export const listTechnicians = query({
 
 export const getTechnicianWorkload = query({
   args: { technicianId: v.id("technicians") },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     

@@ -427,7 +427,7 @@ class PrintManager {
         <div class="receipt-title">RECEIPT</div>
         <div class="receipt-number">Receipt #: ${payment.receiptNumber}</div>
         <div class="receipt-number">Ticket #: ${ticket.ticketNumber}</div>
-        <div>Date: ${new Date(payment.paymentDate).toLocaleDateString()}</div>
+        <div>Date: ${new Date(payment.transactionDate).toLocaleDateString()}</div>
       </div>
 
       <div class="section">

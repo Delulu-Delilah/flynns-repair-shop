@@ -335,7 +335,7 @@ class RepairGridApp {
     });
 
     ipcMain.handle('sync:force', async () => {
-      return syncManager.forcSync();
+      return syncManager.forceSync();
     });
 
     // Print operations
@@ -459,7 +459,7 @@ class RepairGridApp {
             label: 'Sync Now',
             accelerator: 'CmdOrCtrl+R',
             click: () => {
-              syncManager.forcSync();
+              syncManager.forceSync();
               this.mainWindow.webContents.send('menu:sync-status');
             }
           },
@@ -543,10 +543,9 @@ class RepairGridApp {
   }
 
   setupAppEvents() {
-    app.whenReady().then(() => {
-      this.initialize();
-    });
-
+    // Note: app.whenReady() is already handled at the bottom of the file
+    // Don't call initialize() here to avoid double initialization
+    
     app.on('window-all-closed', () => {
       if (process.platform !== 'darwin') {
         this.cleanup();

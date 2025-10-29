@@ -243,7 +243,7 @@ export function CreateTicket({ onTicketCreated }: CreateTicketProps) {
               </label>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as "low" | "medium" | "high" | "urgent" })}
                 className="tron-input tron-select"
               >
                 <option value="low">Low</option>
