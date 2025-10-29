@@ -9,21 +9,48 @@ autoUpdater.autoDownload = false;
 
 // Load environment variables manually
 function loadEnvFile() {
-  const envPath = path.join(__dirname, '..', '.env.local');
-  if (fs.existsSync(envPath)) {
-    const envContent = fs.readFileSync(envPath, 'utf8');
-    const lines = envContent.split('\n');
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        const [key, ...valueParts] = trimmed.split('=');
-        if (key && valueParts.length > 0) {
-          const value = valueParts.join('=');
-          process.env[key] = value;
+  // Try multiple possible locations for .env.local:
+  // 1. Development: __dirname/../.env.local
+  // 2. Production: app.getAppPath()/.env.local or resources/.env.local
+  // 3. Resources folder (if bundled via extraResources)
+  const possiblePaths = [
+    path.join(__dirname, '..', '.env.local'),
+    // Only use app.getAppPath() if app is ready
+    ...(app && app.isReady ? [path.join(app.getAppPath(), '.env.local')] : []),
+    path.join(process.resourcesPath || __dirname, '.env.local'),
+    // Only use app.getPath if app is ready
+    ...(app && app.isReady && app.getPath ? [path.join(app.getPath('userData'), '.env.local')] : []),
+  ];
+  
+  for (const envPath of possiblePaths) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        const lines = envContent.split('\n');
+        
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#')) {
+            const [key, ...valueParts] = trimmed.split('=');
+            if (key && valueParts.length > 0) {
+              const value = valueParts.join('=').trim();
+              if (value) {
+                process.env[key.trim()] = value;
+              }
+            }
+          }
         }
+        console.log(`Loaded environment variables from: ${envPath}`);
+        break; // Stop at first found file
+      } catch (error) {
+        console.error(`Error reading ${envPath}:`, error.message);
       }
     }
+  }
+  
+  // If VITE_CONVEX_URL is still not set, check for CONVEX_URL
+  if (!process.env.VITE_CONVEX_URL && process.env.CONVEX_URL) {
+    process.env.VITE_CONVEX_URL = process.env.CONVEX_URL;
   }
 }
 

@@ -81,6 +81,11 @@
       {
         "from": "electron/assets",
         "to": "assets"
+      },
+      {
+        "from": ".env.local",
+        "to": ".env.local",
+        "filter": [".env.local"]
       }
     ],
     "win": {
