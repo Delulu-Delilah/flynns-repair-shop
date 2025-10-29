@@ -9,6 +9,7 @@ export const createCustomer = mutation({
     phone: v.string(),
     address: v.optional(v.string()),
   },
+  returns: v.id("customers"),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -23,6 +24,16 @@ export const createCustomer = mutation({
 
 export const listCustomers = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("customers"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.optional(v.string()),
+      phone: v.string(),
+      address: v.optional(v.string()),
+    })
+  ),
   handler: async (ctx) => {
     await getAuthUserId(ctx);
     
@@ -36,6 +47,16 @@ export const listCustomers = query({
 
 export const searchCustomers = query({
   args: { searchTerm: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("customers"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.optional(v.string()),
+      phone: v.string(),
+      address: v.optional(v.string()),
+    })
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     
@@ -52,6 +73,51 @@ export const searchCustomers = query({
 
 export const getCustomer = query({
   args: { customerId: v.id("customers") },
+  returns: v.union(
+    v.object({
+      _id: v.id("customers"),
+      _creationTime: v.number(),
+      name: v.string(),
+      email: v.optional(v.string()),
+      phone: v.string(),
+      address: v.optional(v.string()),
+      tickets: v.array(
+        v.object({
+          _id: v.id("tickets"),
+          _creationTime: v.number(),
+          ticketNumber: v.string(),
+          customerId: v.id("customers"),
+          technicianId: v.optional(v.id("technicians")),
+          deviceMake: v.string(),
+          deviceModel: v.string(),
+          serialNumber: v.optional(v.string()),
+          issueDescription: v.string(),
+          diagnosticNotes: v.optional(v.string()),
+          repairActions: v.optional(v.string()),
+          status: v.union(
+            v.literal("received"),
+            v.literal("diagnosed"),
+            v.literal("in_progress"),
+            v.literal("awaiting_parts"),
+            v.literal("completed"),
+            v.literal("picked_up")
+          ),
+          priority: v.union(
+            v.literal("low"),
+            v.literal("medium"),
+            v.literal("high"),
+            v.literal("urgent")
+          ),
+          estimatedCost: v.optional(v.number()),
+          finalCost: v.optional(v.number()),
+          dateReceived: v.number(),
+          dateCompleted: v.optional(v.number()),
+          datePickedUp: v.optional(v.number()),
+        })
+      ),
+    }),
+    v.null()
+  ),
   handler: async (ctx, args) => {
     await getAuthUserId(ctx);
     

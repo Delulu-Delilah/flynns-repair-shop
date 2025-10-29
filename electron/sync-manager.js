@@ -89,11 +89,13 @@ class SyncManager {
     console.log('Starting sync process...');
 
     try {
-      // Sync in order: customers -> technicians -> tickets -> parts
+      // Sync in order: customers -> technicians -> tickets -> parts -> statusHistory -> timeEntries
       await this.syncTable('customers');
       await this.syncTable('technicians');
       await this.syncTable('tickets');
       await this.syncTable('parts');
+      await this.syncTable('statusHistory');
+      await this.syncTable('timeEntries');
       
       console.log('Sync completed successfully');
     } catch (error) {
@@ -243,9 +245,35 @@ class SyncManager {
         break;
       case 'parts':
         converted.ticketId = converted.ticket_id;
+        converted.partName = converted.part_name;
         converted.partNumber = converted.part_number;
+        converted.unitCost = converted.unit_cost;
+        converted.totalCost = converted.total_cost;
         delete converted.ticket_id;
+        delete converted.part_name;
         delete converted.part_number;
+        delete converted.unit_cost;
+        delete converted.total_cost;
+        break;
+      case 'statusHistory':
+        converted.ticketId = converted.ticket_id;
+        converted.previousStatus = converted.previous_status;
+        converted.newStatus = converted.new_status;
+        converted.changedBy = converted.changed_by;
+        delete converted.ticket_id;
+        delete converted.previous_status;
+        delete converted.new_status;
+        delete converted.changed_by;
+        break;
+      case 'timeEntries':
+        converted.technicianId = converted.technician_id;
+        converted.clockIn = converted.clock_in;
+        converted.clockOut = converted.clock_out;
+        converted.totalHours = converted.total_hours;
+        delete converted.technician_id;
+        delete converted.clock_in;
+        delete converted.clock_out;
+        delete converted.total_hours;
         break;
     }
     
@@ -301,9 +329,35 @@ class SyncManager {
         break;
       case 'parts':
         converted.ticket_id = record.ticketId;
+        converted.part_name = record.partName;
         converted.part_number = record.partNumber;
+        converted.unit_cost = record.unitCost;
+        converted.total_cost = record.totalCost;
         delete converted.ticketId;
+        delete converted.partName;
         delete converted.partNumber;
+        delete converted.unitCost;
+        delete converted.totalCost;
+        break;
+      case 'statusHistory':
+        converted.ticket_id = record.ticketId;
+        converted.previous_status = record.previousStatus;
+        converted.new_status = record.newStatus;
+        converted.changed_by = record.changedBy;
+        delete converted.ticketId;
+        delete converted.previousStatus;
+        delete converted.newStatus;
+        delete converted.changedBy;
+        break;
+      case 'timeEntries':
+        converted.technician_id = record.technicianId;
+        converted.clock_in = record.clockIn;
+        converted.clock_out = record.clockOut;
+        converted.total_hours = record.totalHours;
+        delete converted.technicianId;
+        delete converted.clockIn;
+        delete converted.clockOut;
+        delete converted.totalHours;
         break;
     }
     
@@ -339,10 +393,15 @@ class SyncManager {
     };
   }
 
-  forcSync() {
+  forceSync() {
     if (!this.syncInProgress) {
       this.performSync();
     }
+  }
+
+  setOnlineStatus(status) {
+    this.isOnline = status;
+    localDb.setOnlineStatus(status);
   }
 
   stop() {

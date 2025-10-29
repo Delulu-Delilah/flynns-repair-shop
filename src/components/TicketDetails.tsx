@@ -42,7 +42,10 @@ export function TicketDetails({ ticketId, onBack }: TicketDetailsProps) {
     repairActions: "",
     finalCost: "",
   });
-  const [statusUpdate, setStatusUpdate] = useState({
+  const [statusUpdate, setStatusUpdate] = useState<{
+    newStatus: "received" | "diagnosed" | "in_progress" | "awaiting_parts" | "completed" | "picked_up" | "";
+    notes: string;
+  }>({
     newStatus: "",
     notes: "",
   });
@@ -95,7 +98,7 @@ export function TicketDetails({ ticketId, onBack }: TicketDetailsProps) {
     try {
       await updateTicketStatus({
         ticketId,
-        newStatus: statusUpdate.newStatus as any,
+        newStatus: statusUpdate.newStatus,
         notes: statusUpdate.notes || undefined,
       });
       setStatusUpdate({ newStatus: "", notes: "" });

@@ -152,7 +152,7 @@ export const updateTimeEntry = mutation({
       throw new Error("Time entry not found");
     }
 
-    const updates: any = {};
+    const updates: Partial<{ clockIn: number; clockOut: number; totalHours: number; notes: string }> = {};
     
     if (args.clockIn !== undefined) {
       updates.clockIn = args.clockIn;

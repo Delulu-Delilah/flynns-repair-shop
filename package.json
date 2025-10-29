@@ -15,7 +15,7 @@
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
     "dev:frontend": "vite --open",
     "dev:backend": "convex dev",
-    "electron": "set NODE_ENV=development && electron .",
+    "electron": "electron .",
     "electron:dev": "npm-run-all --parallel dev:backend electron",
     "build": "vite build",
     "electron:pack": "npm run build && electron-builder --dir",
