@@ -5,13 +5,14 @@ import "./index.css";
 import App from "./App";
 
 // Resolve Convex URL at runtime with robust fallbacks
-// 1) Use Vite build-time var when available
-// 2) Fallback to Electron-preloaded env (when running as desktop app)
-// 3) As a last resort, use an empty string which will surface a clear error in UI
+// 1) Use Electron-preloaded env (desktop app)
+// 2) Use Vite build-time var (web/dev server)
+// 3) Fallback to known deployment URL to avoid blocking startup
+const DEFAULT_CONVEX_URL = "https://focused-possum-733.convex.cloud";
 const runtimeConvexUrl =
   (typeof window !== "undefined" && (window as any)?.electronAPI?.env?.CONVEX_URL) ||
   (import.meta as any).env?.VITE_CONVEX_URL ||
-  "";
+  DEFAULT_CONVEX_URL;
 
 const rootElement = document.getElementById("root")!;
 
