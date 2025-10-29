@@ -3,6 +3,11 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Environment variables needed by the renderer
+  env: {
+    // Prefer explicit Vite var, fallback to generic
+    CONVEX_URL: process.env.VITE_CONVEX_URL || process.env.CONVEX_URL,
+  },
   // Database operations
   database: {
     insert: (table, data) => ipcRenderer.invoke('db:insert', table, data),
