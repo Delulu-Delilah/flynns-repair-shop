@@ -5,8 +5,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // Environment variables needed by the renderer
   env: {
-    // Prefer explicit Vite var, fallback to generic
-    CONVEX_URL: process.env.VITE_CONVEX_URL || process.env.CONVEX_URL,
+    // Prefer explicit Vite var, fallback to generic, then hardcoded production URL
+    CONVEX_URL: process.env.VITE_CONVEX_URL || process.env.CONVEX_URL || 'https://focused-possum-733.convex.cloud',
   },
   // Database operations
   database: {

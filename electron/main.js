@@ -9,18 +9,21 @@ autoUpdater.autoDownload = false;
 
 // Load environment variables manually
 function loadEnvFile() {
+  const isPackaged = app.isPackaged;
+  
   // Try multiple possible locations for .env.local:
   // 1. Development: __dirname/../.env.local
   // 2. Production: app.getAppPath()/.env.local or resources/.env.local
   // 3. Resources folder (if bundled via extraResources)
   const possiblePaths = [
     path.join(__dirname, '..', '.env.local'),
-    // Only use app.getAppPath() if app is ready
-    ...(app && app.isReady ? [path.join(app.getAppPath(), '.env.local')] : []),
-    path.join(process.resourcesPath || __dirname, '.env.local'),
-    // Only use app.getPath if app is ready
-    ...(app && app.isReady && app.getPath ? [path.join(app.getPath('userData'), '.env.local')] : []),
+    ...(app.isReady ? [path.join(app.getAppPath(), '.env.local')] : []),
+    ...(isPackaged && process.resourcesPath ? [path.join(process.resourcesPath, '.env.local')] : []),
+    ...(app.isReady && app.getPath ? [path.join(app.getPath('userData'), '.env.local')] : []),
   ];
+  
+  console.log('Loading environment variables (packaged:', isPackaged, ')');
+  console.log('Checking paths:', possiblePaths);
   
   for (const envPath of possiblePaths) {
     if (fs.existsSync(envPath)) {
@@ -40,10 +43,10 @@ function loadEnvFile() {
             }
           }
         }
-        console.log(`Loaded environment variables from: ${envPath}`);
+        console.log(`✅ Loaded environment variables from: ${envPath}`);
         break; // Stop at first found file
       } catch (error) {
-        console.error(`Error reading ${envPath}:`, error.message);
+        console.error(`❌ Error reading ${envPath}:`, error.message);
       }
     }
   }
@@ -51,10 +54,20 @@ function loadEnvFile() {
   // If VITE_CONVEX_URL is still not set, check for CONVEX_URL
   if (!process.env.VITE_CONVEX_URL && process.env.CONVEX_URL) {
     process.env.VITE_CONVEX_URL = process.env.CONVEX_URL;
+    console.log('✅ Set VITE_CONVEX_URL from CONVEX_URL');
+  }
+  
+  // Hardcoded fallback for production (your Convex deployment URL)
+  if (!process.env.VITE_CONVEX_URL) {
+    const productionUrl = 'https://focused-possum-733.convex.cloud';
+    process.env.VITE_CONVEX_URL = productionUrl;
+    console.log('⚠️  Using hardcoded fallback URL:', productionUrl);
+  } else {
+    console.log('✅ VITE_CONVEX_URL is set:', process.env.VITE_CONVEX_URL);
   }
 }
 
-// Load environment variables
+// Load environment variables (will be reloaded when app is ready)
 loadEnvFile();
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -74,6 +87,9 @@ class RepairGridApp {
     try {
       console.log('Starting Flynns initialization...');
       
+      // Reload environment variables now that app is ready (paths will be available)
+      loadEnvFile();
+      
       // Set app icon and identity for Windows
       if (process.platform === 'win32') {
         // Set a unique app user model ID for Windows taskbar grouping
@@ -87,9 +103,10 @@ class RepairGridApp {
       console.log('Initializing database...');
       localDb.initialize();
       
-      // Initialize sync manager
-      console.log('Initializing sync manager...');
-      syncManager.initialize(process.env.VITE_CONVEX_URL || process.env.CONVEX_URL);
+      // Initialize sync manager with Convex URL
+      const convexUrl = process.env.VITE_CONVEX_URL || process.env.CONVEX_URL || 'https://focused-possum-733.convex.cloud';
+      console.log('Initializing sync manager with URL:', convexUrl);
+      syncManager.initialize(convexUrl);
 
       // Set up auto-updater
       console.log('Setting up auto-updater...');
